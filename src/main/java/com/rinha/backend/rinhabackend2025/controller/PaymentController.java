@@ -1,11 +1,18 @@
 package com.rinha.backend.rinhabackend2025.controller;
 
 import com.rinha.backend.rinhabackend2025.dto.PaymentDto;
+import com.rinha.backend.rinhabackend2025.dto.PaymentSummary;
 import com.rinha.backend.rinhabackend2025.service.PaymentService;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @RestController
 public class PaymentController {
@@ -20,5 +27,22 @@ public class PaymentController {
     public ResponseEntity<Void> processarPagamento(@RequestBody PaymentDto paymentDto){
         service.sendPayment(paymentDto);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping
+    public ResponseEntity<Map<String, PaymentSummary>> getSummary(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to
+    ) {
+
+        List<PaymentSummary> summaries = service.findSummaryByPeriod(from, to);
+
+        Map<String, PaymentSummary> response = summaries.stream()
+                .collect(Collectors.toMap(PaymentSummary::strategy, Function.identity()));
+
+        response.putIfAbsent("default", new PaymentSummary("default", 0, BigDecimal.ZERO));
+        response.putIfAbsent("fallback", new PaymentSummary("fallback", 0, BigDecimal.ZERO));
+
+        return ResponseEntity.ok(response);
     }
 }
