@@ -17,7 +17,7 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
             COUNT(pl),
             COALESCE(SUM(pl.amount), 0)
         )
-        FROM PaymentLog pl
+        FROM Payment pl
         WHERE pl.timestamp BETWEEN :from AND :to
         GROUP BY pl.strategy
     """)

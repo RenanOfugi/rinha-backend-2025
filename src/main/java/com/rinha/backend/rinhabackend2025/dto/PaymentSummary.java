@@ -1,9 +1,11 @@
 package com.rinha.backend.rinhabackend2025.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import java.math.BigDecimal;
 
 public record PaymentSummary(
-        String strategy,
+        @JsonIgnore String strategy,
         long totalRequests,
         BigDecimal totalAmount
 ) {

@@ -2,7 +2,9 @@ version: "3.8"
 
 services:
   app-1:
-    image: seu-usuario/rinha-backend:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
     hostname: app-1
     environment:
       - PAYMENT_PROCESSOR_URL_DEFAULT=http://payment-processor-default:8080
@@ -12,6 +14,8 @@ services:
       - SPRING_DATASOURCE_PASSWORD=postgres
       - SPRING_RABBITMQ_HOST=rabbitmq
       - SERVER_PORT=9999
+      - JAVA_TOOL_OPTIONS=-XX:+UseContainerSupport -XX:MaxRAMPercentage=80.0 -XX:+UseSerialGC -Xss512k
+      - SPRING_MAIN_LAZY_INITIALIZATION=true
     networks:
       - backend
       - payment-processor
@@ -22,7 +26,9 @@ services:
           memory: "110MB"
 
   app-2:
-    image: seu-usuario/rinha-backend:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
     hostname: app-2
     environment:
       - PAYMENT_PROCESSOR_URL_DEFAULT=http://payment-processor-default:8080
@@ -32,6 +38,8 @@ services:
       - SPRING_DATASOURCE_PASSWORD=postgres
       - SPRING_RABBITMQ_HOST=rabbitmq
       - SERVER_PORT=9999
+      - JAVA_TOOL_OPTIONS=-XX:+UseContainerSupport -XX:MaxRAMPercentage=80.0 -XX:+UseSerialGC -Xss512k
+      - SPRING_MAIN_LAZY_INITIALIZATION=true
     networks:
       - backend
       - payment-processor
