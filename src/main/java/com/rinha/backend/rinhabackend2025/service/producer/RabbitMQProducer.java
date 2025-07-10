@@ -1,8 +1,7 @@
-package com.rinha.backend.rinhabackend2025.service;
+package com.rinha.backend.rinhabackend2025.service.producer;
 
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
 
 @Component
 public class RabbitMQProducer<T> {

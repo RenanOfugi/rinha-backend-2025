@@ -1,6 +1,6 @@
 package com.rinha.backend.rinhabackend2025.config;
 
-import com.rinha.backend.rinhabackend2025.utils.RabbitEnum;
+import com.rinha.backend.rinhabackend2025.utils.ConstantUtils;
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -14,12 +14,12 @@ public class RabbitConfig {
 
     @Bean
     public Queue paymentQueue(){
-        return new Queue(RabbitEnum.PAYMENT_QUEUE.getValue());
+        return new Queue(ConstantUtils.RabbitMQ.PAYMENT_QUEUE);
     }
 
     @Bean
     public DirectExchange paymentExchange(){
-        return new DirectExchange(RabbitEnum.PAYMENT_EXCHANGE.getValue());
+        return new DirectExchange(ConstantUtils.RabbitMQ.PAYMENT_EXCHANGE);
     }
 
     @Bean
@@ -27,7 +27,7 @@ public class RabbitConfig {
         return BindingBuilder
                 .bind(paymentQueue())
                 .to(paymentExchange())
-                .with(RabbitEnum.PAYMENT_ROUTING_KEY.getValue());
+                .with(ConstantUtils.RabbitMQ.PAYMENT_ROUTING_KEY);
     }
 
     @Bean

@@ -1,7 +1,8 @@
 package com.rinha.backend.rinhabackend2025.service;
 
 import com.rinha.backend.rinhabackend2025.dto.PaymentDto;
-import com.rinha.backend.rinhabackend2025.utils.RabbitEnum;
+import com.rinha.backend.rinhabackend2025.service.producer.RabbitMQProducer;
+import com.rinha.backend.rinhabackend2025.utils.ConstantUtils;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -15,8 +16,8 @@ public class PaymentService {
 
     public void sendPayment(PaymentDto paymentDto){
         producer.enviarMensagem(
-                RabbitEnum.PAYMENT_EXCHANGE.getValue(),
-                RabbitEnum.PAYMENT_ROUTING_KEY.getValue(),
+                ConstantUtils.RabbitMQ.PAYMENT_EXCHANGE,
+                ConstantUtils.RabbitMQ.PAYMENT_ROUTING_KEY,
                 paymentDto
         );
     }
