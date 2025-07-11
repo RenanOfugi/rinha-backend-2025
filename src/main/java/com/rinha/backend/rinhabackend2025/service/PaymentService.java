@@ -23,6 +23,7 @@ public class PaymentService {
     }
 
     public void sendPayment(PaymentDto paymentDto){
+        System.out.println("enviando... !!!!!");
         producer.enviarMensagem(
                 ConstantUtils.RabbitMQ.PAYMENT_EXCHANGE,
                 ConstantUtils.RabbitMQ.PAYMENT_ROUTING_KEY,

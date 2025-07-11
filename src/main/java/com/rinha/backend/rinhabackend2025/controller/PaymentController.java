@@ -30,10 +30,10 @@ public class PaymentController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/admin/payments-summary")
+    @GetMapping("/payments-summary")
     public ResponseEntity<Map<String, PaymentSummary>> getSummary(
-            @RequestParam(required = false) LocalDateTime from,
-            @RequestParam(required = false) LocalDateTime to
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to
     ) {
 
         List<PaymentSummary> summaries = service.findSummaryByPeriod(from, to);

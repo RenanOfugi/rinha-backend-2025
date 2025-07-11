@@ -19,6 +19,7 @@ public class PaymentConsumer {
 
     @RabbitListener(queues = ConstantUtils.RabbitMQ.PAYMENT_QUEUE)
     public void sendPayment(PaymentDto paymentDto){
+        System.out.println("Recebi !!!!!");
         paymentDto.setRequestedAt(LocalDateTime.now());
         paymentSender.sendPayment(paymentDto);
     }
