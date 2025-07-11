@@ -23,7 +23,7 @@ services:
       resources:
         limits:
           cpus: "0.5"
-          memory: "110MB"
+          memory: "610MB"
 
   app-2:
     build:
@@ -47,7 +47,7 @@ services:
       resources:
         limits:
           cpus: "0.5"
-          memory: "110MB"
+          memory: "610MB"
 
   db:
     image: postgres:16
@@ -95,7 +95,7 @@ services:
       resources:
         limits:
           cpus: "0.15"
-          memory: "20MB"
+          memory: "200MB"
 
 networks:
   backend:

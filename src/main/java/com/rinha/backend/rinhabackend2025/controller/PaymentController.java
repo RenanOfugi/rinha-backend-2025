@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+@CrossOrigin
 @RestController
 public class PaymentController {
 
@@ -29,19 +30,19 @@ public class PaymentController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping
+    @GetMapping("/admin/payments-summary")
     public ResponseEntity<Map<String, PaymentSummary>> getSummary(
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to
+            @RequestParam(required = false) LocalDateTime from,
+            @RequestParam(required = false) LocalDateTime to
     ) {
 
         List<PaymentSummary> summaries = service.findSummaryByPeriod(from, to);
 
         Map<String, PaymentSummary> response = summaries.stream()
-                .collect(Collectors.toMap(PaymentSummary::strategy, Function.identity()));
+                .collect(Collectors.toMap(PaymentSummary::getStrategy, Function.identity()));
 
-        response.putIfAbsent("default", new PaymentSummary("default", 0, BigDecimal.ZERO));
-        response.putIfAbsent("fallback", new PaymentSummary("fallback", 0, BigDecimal.ZERO));
+        response.putIfAbsent("default", new PaymentSummary("default", 0L, BigDecimal.ZERO));
+        response.putIfAbsent("fallback", new PaymentSummary("fallback", 0L, BigDecimal.ZERO));
 
         return ResponseEntity.ok(response);
     }

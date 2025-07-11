@@ -12,7 +12,7 @@ import java.util.List;
 public interface PaymentRepository extends JpaRepository<Payment, Long> {
 
     @Query("""
-        SELECT com.rinha.backend.rinhabackend2025.dto.PaymentSummary(
+        SELECT new com.rinha.backend.rinhabackend2025.dto.PaymentSummary(
             pl.strategy,
             COUNT(pl),
             COALESCE(SUM(pl.amount), 0)
