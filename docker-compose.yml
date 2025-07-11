@@ -84,22 +84,6 @@ services:
 #          cpus: "0.15"
 #          memory: "15MB"
 
-  rabbitmq:
-    image: rabbitmq:3.12-alpine
-    hostname: rabbitmq
-    networks:
-      - backend
-    environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
-    ports:
-      - "5672:5672"
-#    deploy:
-#      resources:
-#        limits:
-#          cpus: "0.15"
-#          memory: "200MB"
-
 networks:
   backend:
     driver: bridge

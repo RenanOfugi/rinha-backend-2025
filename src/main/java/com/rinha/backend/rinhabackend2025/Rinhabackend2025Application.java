@@ -1,11 +1,9 @@
 package com.rinha.backend.rinhabackend2025;
 
-import org.springframework.amqp.rabbit.annotation.EnableRabbit;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-@EnableRabbit
 public class Rinhabackend2025Application {
 
 	public static void main(String[] args) {
