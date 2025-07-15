@@ -6,6 +6,7 @@ import com.rinha.backend.rinhabackend2025.entity.Payment;
 import com.rinha.backend.rinhabackend2025.repository.PaymentRepository;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.util.Pair;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
@@ -18,17 +19,11 @@ import java.time.Duration;
 @Component
 public class PaymentSender {
 
-    private final PaymentRepository repository;
-
     @Value("${payment-processor.url.default}")
     private String urlDefault;
 
     @Value("${payment-processor.url.fallback}")
     private String urlFallback;
-
-    public PaymentSender(PaymentRepository repository) {
-        this.repository = repository;
-    }
 
     private WebClient defaultClient;
     private WebClient fallbackClient;
@@ -39,39 +34,51 @@ public class PaymentSender {
         fallbackClient = getWebClient(urlFallback);
     }
 
-    public void sendPayment(PaymentDto paymentDto) {
+    public Mono<Pair<Payment, String>> sendPayment(Payment payment) {
 
-        sendPaymentWithRetries(defaultClient, paymentDto)
-                .doOnSuccess(messageDto -> {
-                    repository.save(
-                            new Payment(null, paymentDto.getCorrelationId(), "default", paymentDto.getAmount(), paymentDto.getRequestedAt())
-                    );
-                    System.out.println("Payment sent successfully via default URL for correlationId: " + paymentDto.getCorrelationId());
+        PaymentDto paymentDto = new PaymentDto(
+                payment.getCorrelationId(), payment.getAmount(), payment.getTimestamp()
+        );
+
+        return attemptSend(payment, paymentDto, defaultClient, "default", 1, true);
+    }
+
+    private Mono<Pair<Payment, String>> attemptSend(
+            Payment payment,
+            PaymentDto paymentDto,
+            WebClient currentClient,
+            String currentClientName,
+            int attemptCount,
+            boolean useRetriesForCurrentAttempt) {
+
+        Mono<MessageDto> sendMono;
+        if (useRetriesForCurrentAttempt) {
+            sendMono = sendPaymentWithRetries(currentClient, paymentDto);
+        } else {
+            sendMono = sendPaymentWithoutRetries(currentClient, paymentDto);
+        }
+
+        return sendMono
+                .map(messageDto -> {
+                    System.out.println("Payment sent successfully via " + currentClientName + " URL (attempt " + attemptCount + ") for correlationId: " + paymentDto.getCorrelationId());
+                    return Pair.of(payment, currentClientName);
                 })
                 .onErrorResume(ex -> {
-                    System.err.println("Default payment failed for correlationId: " + paymentDto.getCorrelationId() + ". Attempting fallback. Error: " + ex.getMessage());
-                    return sendPaymentWithoutRetries(fallbackClient, paymentDto)
-                            .doOnSuccess(messageDto -> {
-                                repository.save(
-                                        new Payment(null, paymentDto.getCorrelationId(), "fallback", paymentDto.getAmount(), paymentDto.getRequestedAt())
-                                );
-                                System.out.println("Payment sent successfully via fallback URL for correlationId: " + paymentDto.getCorrelationId());
-                            })
-                            .onErrorResume(fallbackEx -> { // Captura o erro do fallback (incluindo 422)
-                                System.err.println("Failed to send payment via both default and fallback for correlationId: " + paymentDto.getCorrelationId() + ". Final Error: " + fallbackEx.getMessage());
-                                // Salva o pagamento com status 'failed' no banco de dados local
-                                repository.save(
-                                        new Payment(null, paymentDto.getCorrelationId(), "failed", paymentDto.getAmount(), paymentDto.getRequestedAt())
-                                );
-                                // Retorna Mono.empty() para "consumir" o erro e evitar que chegue ao subscribe final
-                                return Mono.empty();
-                            });
-                })
-                .subscribe(
-                        messageDto -> System.out.println("Overall payment processing completed for correlationId: " + paymentDto.getCorrelationId()),
-                        // Este onError só será chamado se um erro não for tratado pelos onErrorResume anteriores
-                        throwable -> System.err.println("Overall payment processing failed for correlationId: " + paymentDto.getCorrelationId() + ". Unhandled error: " + throwable.getMessage())
-                );
+                    System.err.println("Attempt " + attemptCount + " via " + currentClientName + " failed for correlationId: " + paymentDto.getCorrelationId() + ". Error: " + ex.getMessage());
+
+                    WebClient nextClient;
+                    String nextClientName;
+
+                    if (currentClient == defaultClient) {
+                        nextClient = fallbackClient;
+                        nextClientName = "fallback";
+                    } else {
+                        nextClient = defaultClient;
+                        nextClientName = "default";
+                    }
+
+                    return attemptSend(payment, paymentDto, nextClient, nextClientName, attemptCount + 1, false);
+                });
     }
 
     private Mono<MessageDto> sendPaymentWithRetries(WebClient webClient, PaymentDto paymentDto) {

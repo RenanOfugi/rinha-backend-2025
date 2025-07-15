@@ -2,6 +2,8 @@ package com.rinha.backend.rinhabackend2025.service;
 
 import com.rinha.backend.rinhabackend2025.dto.PaymentDto;
 import com.rinha.backend.rinhabackend2025.dto.PaymentSummary;
+import com.rinha.backend.rinhabackend2025.entity.Payment;
+import com.rinha.backend.rinhabackend2025.enums.StatusEnum;
 import com.rinha.backend.rinhabackend2025.repository.PaymentRepository;
 import org.springframework.stereotype.Service;
 
@@ -12,17 +14,19 @@ import java.util.List;
 public class PaymentService {
 
     private final PaymentRepository repository;
-    private final PaymentSender sender;
+    private final PaymentJob sender;
 
 
-    public PaymentService(PaymentRepository repository, PaymentSender sender) {
+    public PaymentService(PaymentRepository repository, PaymentJob sender) {
         this.sender = sender;
         this.repository = repository;
     }
 
     public void sendPayment(PaymentDto paymentDto){
         paymentDto.setRequestedAt(LocalDateTime.now());
-        sender.sendPayment(paymentDto);
+        repository.save(
+                new Payment(null, paymentDto.getCorrelationId(), "default", paymentDto.getAmount(), paymentDto.getRequestedAt(), StatusEnum.PENDING)
+        );
     }
 
     public List<PaymentSummary> findSummaryByPeriod(LocalDateTime from, LocalDateTime to) {

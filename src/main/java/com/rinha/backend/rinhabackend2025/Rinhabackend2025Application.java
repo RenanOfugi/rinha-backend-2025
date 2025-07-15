@@ -2,7 +2,9 @@ package com.rinha.backend.rinhabackend2025;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
+@EnableScheduling
 @SpringBootApplication
 public class Rinhabackend2025Application {
 

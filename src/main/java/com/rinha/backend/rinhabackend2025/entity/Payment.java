@@ -1,8 +1,11 @@
 package com.rinha.backend.rinhabackend2025.entity;
 
+import com.rinha.backend.rinhabackend2025.enums.StatusEnum;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -12,6 +15,8 @@ import java.util.UUID;
 @Table(name = "payment")
 @AllArgsConstructor
 @NoArgsConstructor
+@Getter
+@Setter
 public class Payment {
 
     @Id
@@ -25,4 +30,6 @@ public class Payment {
     private BigDecimal amount;
 
     private LocalDateTime timestamp;
+
+    private StatusEnum status;
 }
