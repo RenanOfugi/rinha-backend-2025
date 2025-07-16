@@ -1,6 +1,5 @@
 package com.rinha.backend.rinhabackend2025.service;
 
-import com.rinha.backend.rinhabackend2025.dto.PaymentDto;
 import com.rinha.backend.rinhabackend2025.entity.Payment;
 import com.rinha.backend.rinhabackend2025.enums.StatusEnum;
 import com.rinha.backend.rinhabackend2025.repository.PaymentRepository;
@@ -48,7 +47,10 @@ public class PaymentJob {
                     payment.setStatus(StatusEnum.OK);
                     paymentsComplete.add(payment);
                 } catch (InterruptedException | ExecutionException e) {
+                    System.out.println("ERRO: " + e.getMessage());
                     System.out.println("Erro processamento");
+
+                    e.printStackTrace();
                 }
             });
 

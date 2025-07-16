@@ -2,14 +2,8 @@ package com.rinha.backend.rinhabackend2025.repository;
 
 import com.rinha.backend.rinhabackend2025.dto.PaymentSummary;
 import com.rinha.backend.rinhabackend2025.entity.Payment;
-import jakarta.persistence.LockModeType;
-import jakarta.persistence.QueryHint;
-import org.hibernate.LockOptions;
-import org.hibernate.cfg.AvailableSettings;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.jpa.repository.QueryHints;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
@@ -25,15 +19,15 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
         )
         FROM Payment pl
         WHERE pl.timestamp BETWEEN :from AND :to
-        AND pl.status = 'OK'
+        AND pl.status = com.rinha.backend.rinhabackend2025.enums.StatusEnum.OK
         GROUP BY pl.strategy
     """)
     List<PaymentSummary> findSummaryByPeriod(@Param("from") LocalDateTime from, @Param("to") LocalDateTime to);
 
-    @Query("""
+    @Query(value = """
                 SELECT p.* FROM payment p WHERE p.status = 'PENDING'
                 LIMIT 100
                 FOR UPDATE SKIP LOCKED
-            """)
+            """, nativeQuery = true)
     List<Payment> findPendingPayment();
 }

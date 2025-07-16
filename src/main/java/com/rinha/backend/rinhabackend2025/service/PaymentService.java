@@ -23,9 +23,8 @@ public class PaymentService {
     }
 
     public void sendPayment(PaymentDto paymentDto){
-        paymentDto.setRequestedAt(LocalDateTime.now());
         repository.save(
-                new Payment(null, paymentDto.getCorrelationId(), "default", paymentDto.getAmount(), paymentDto.getRequestedAt(), StatusEnum.PENDING)
+                new Payment(null, paymentDto.getCorrelationId(), "default", paymentDto.getAmount(), LocalDateTime.now(), StatusEnum.PENDING)
         );
     }
 

@@ -1,9 +1,11 @@
 package com.rinha.backend.rinhabackend2025.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import com.rinha.backend.rinhabackend2025.dto.MessageDto;
 import com.rinha.backend.rinhabackend2025.dto.PaymentDto;
 import com.rinha.backend.rinhabackend2025.entity.Payment;
-import com.rinha.backend.rinhabackend2025.repository.PaymentRepository;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.util.Pair;
@@ -39,6 +41,14 @@ public class PaymentSender {
         PaymentDto paymentDto = new PaymentDto(
                 payment.getCorrelationId(), payment.getAmount(), payment.getTimestamp()
         );
+
+        ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
+        try {
+            String json = ow.writeValueAsString(paymentDto);
+            System.out.println(json);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
 
         return attemptSend(payment, paymentDto, defaultClient, "default", 1, true);
     }
