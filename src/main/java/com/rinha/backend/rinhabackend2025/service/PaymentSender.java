@@ -11,6 +11,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.util.Pair;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.codec.json.Jackson2JsonDecoder;
+import org.springframework.http.codec.json.Jackson2JsonEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
@@ -21,6 +23,8 @@ import java.time.Duration;
 @Component
 public class PaymentSender {
 
+    private final ObjectMapper objectMapper;
+
     @Value("${payment-processor.url.default}")
     private String urlDefault;
 
@@ -29,6 +33,10 @@ public class PaymentSender {
 
     private WebClient defaultClient;
     private WebClient fallbackClient;
+
+    public PaymentSender(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+    }
 
     @PostConstruct
     public void init(){
@@ -42,9 +50,10 @@ public class PaymentSender {
                 payment.getCorrelationId(), payment.getAmount(), payment.getTimestamp()
         );
 
-        ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
+        System.out.println("CONVERTENDO AQUI");
+
         try {
-            String json = ow.writeValueAsString(paymentDto);
+            String json = objectMapper.writeValueAsString(paymentDto);
             System.out.println(json);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
@@ -112,6 +121,12 @@ public class PaymentSender {
 
     private WebClient getWebClient(String baseUrl) {
         return WebClient.builder()
+                .codecs(configurer -> {
+                    configurer.defaultCodecs().jackson2JsonEncoder(
+                            new Jackson2JsonEncoder(objectMapper, MediaType.APPLICATION_JSON));
+                    configurer.defaultCodecs().jackson2JsonDecoder(
+                            new Jackson2JsonDecoder(objectMapper, MediaType.APPLICATION_JSON));
+                })
                 .baseUrl(baseUrl)
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .build();

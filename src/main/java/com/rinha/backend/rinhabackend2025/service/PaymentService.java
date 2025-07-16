@@ -7,6 +7,7 @@ import com.rinha.backend.rinhabackend2025.enums.StatusEnum;
 import com.rinha.backend.rinhabackend2025.repository.PaymentRepository;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -24,11 +25,11 @@ public class PaymentService {
 
     public void sendPayment(PaymentDto paymentDto){
         repository.save(
-                new Payment(null, paymentDto.getCorrelationId(), "default", paymentDto.getAmount(), LocalDateTime.now(), StatusEnum.PENDING)
+                new Payment(null, paymentDto.getCorrelationId(), "default", paymentDto.getAmount(), Instant.now(), StatusEnum.PENDING)
         );
     }
 
-    public List<PaymentSummary> findSummaryByPeriod(LocalDateTime from, LocalDateTime to) {
+    public List<PaymentSummary> findSummaryByPeriod(Instant from, Instant to) {
         return repository.findSummaryByPeriod(from, to);
     }
 }

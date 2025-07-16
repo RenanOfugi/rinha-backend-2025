@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -33,18 +34,24 @@ public class PaymentController {
 
     @GetMapping("/payments-summary")
     public ResponseEntity<Map<String, PaymentSummary>> getSummary(
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant to
     ) {
 
-        List<PaymentSummary> summaries = service.findSummaryByPeriod(from, to);
+        try {
+            List<PaymentSummary> summaries = service.findSummaryByPeriod(from, to);
 
-        Map<String, PaymentSummary> response = summaries.stream()
-                .collect(Collectors.toMap(PaymentSummary::getStrategy, Function.identity()));
+            Map<String, PaymentSummary> response = summaries.stream()
+                    .collect(Collectors.toMap(PaymentSummary::getStrategy, Function.identity()));
 
-        response.putIfAbsent("default", new PaymentSummary("default", 0L, BigDecimal.ZERO));
-        response.putIfAbsent("fallback", new PaymentSummary("fallback", 0L, BigDecimal.ZERO));
+            response.putIfAbsent("default", new PaymentSummary("default", 0L, BigDecimal.ZERO));
+            response.putIfAbsent("fallback", new PaymentSummary("fallback", 0L, BigDecimal.ZERO));
 
-        return ResponseEntity.ok(response);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return null;
     }
 }

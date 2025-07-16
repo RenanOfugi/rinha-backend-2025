@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -22,7 +23,7 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
         AND pl.status = com.rinha.backend.rinhabackend2025.enums.StatusEnum.OK
         GROUP BY pl.strategy
     """)
-    List<PaymentSummary> findSummaryByPeriod(@Param("from") LocalDateTime from, @Param("to") LocalDateTime to);
+    List<PaymentSummary> findSummaryByPeriod(@Param("from") Instant from, @Param("to") Instant to);
 
     @Query(value = """
                 SELECT p.* FROM payment p WHERE p.status = 'PENDING'

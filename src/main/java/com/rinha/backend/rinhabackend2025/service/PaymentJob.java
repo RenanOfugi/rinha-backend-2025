@@ -6,6 +6,8 @@ import com.rinha.backend.rinhabackend2025.repository.PaymentRepository;
 import org.springframework.data.util.Pair;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,8 +26,9 @@ public class PaymentJob {
         this.repository = repository;
     }
 
+    @Transactional
     @Scheduled(fixedDelay = 1000)
-    private void processingPayments(){
+    public void processingPayments(){
 
         List<Payment> batchPayment = repository.findPendingPayment();
 
@@ -49,7 +52,6 @@ public class PaymentJob {
                 } catch (InterruptedException | ExecutionException e) {
                     System.out.println("ERRO: " + e.getMessage());
                     System.out.println("Erro processamento");
-
                     e.printStackTrace();
                 }
             });
