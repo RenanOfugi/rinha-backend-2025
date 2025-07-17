@@ -10,9 +10,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
-import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @Component
@@ -46,24 +46,30 @@ public class PaymentJob {
 
         try(var executor = Executors.newVirtualThreadPerTaskExecutor()) {
 
-            //List<Future<Pair<Payment, String>>> futures = new ArrayList<>();
+            List<Future<Pair<Payment, String>>> futures = new ArrayList<>();
 
-            List<CompletableFuture<Pair<Payment, String>>> futures = batchPayment.stream()
-                    .map(payment -> CompletableFuture.supplyAsync(() -> sender.sendPayment(payment).block()))
-                    .toList();
+            for (Payment payment : batchPayment){
+                futures.add(executor.submit( () -> sender.sendPayment(payment).block()));
+            }
 
-            List<Payment> paymentsComplete = futures.stream()
-                    .map(CompletableFuture::join)
-                    .filter(Objects::nonNull)
-                    .map(result -> {
-                        Payment p = result.getFirst();
-                        p.setStrategy(result.getSecond());
-                        p.setStatus(StatusEnum.OK);
-                        return p;
-                    })
-                    .toList();
+            List<Payment> paymentsComplete = new ArrayList<>();
 
-            repository.saveAll(paymentsComplete);
+            futures.forEach(future -> {
+                try {
+                    Pair<Payment, String> paymentStringPair = future.get();
+                    Payment payment = paymentStringPair.getFirst();
+                    payment.setStrategy(paymentStringPair.getSecond());
+                    payment.setStatus(StatusEnum.OK);
+              //      paymentsComplete.add(payment);
+                    repository.save(payment);
+                } catch (InterruptedException | ExecutionException e) {
+                    System.out.println("ERRO: " + e.getMessage());
+                    System.out.println("Erro processamento");
+                    e.printStackTrace();
+                }
+            });
+
+            //repository.saveAll(paymentsComplete);
         }
     }
 }
