@@ -7,7 +7,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.List;
 
 public interface PaymentRepository extends JpaRepository<Payment, Long> {
@@ -19,7 +18,7 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
             COALESCE(SUM(pl.amount), 0)
         )
         FROM Payment pl
-        WHERE pl.timestamp BETWEEN :from AND :to
+        WHERE :from <= pl.timestamp AND pl.timestamp <= :to
         AND pl.status = com.rinha.backend.rinhabackend2025.enums.StatusEnum.OK
         GROUP BY pl.strategy
     """)
@@ -27,7 +26,7 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
 
     @Query(value = """
                 SELECT p.* FROM payment p WHERE p.status = 'PENDING'
-                LIMIT 100
+                LIMIT 200
                 FOR UPDATE SKIP LOCKED
             """, nativeQuery = true)
     List<Payment> findPendingPayment();

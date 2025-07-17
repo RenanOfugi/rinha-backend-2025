@@ -9,14 +9,17 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
-import java.sql.Timestamp;
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "payment")
+@Table(name = "payment", indexes = {
+        @Index(name = "idx_payment_timestamp_status", columnList = "timestamp,status"),
+        @Index(name = "idx_payment_strategy", columnList = "strategy"),
+        @Index(name = "idx_payment_status", columnList = "status"),
+        @Index(name = "idx_payment_correlation_id", columnList = "correlationId", unique = true),
+        @Index(name = "idx_payment_timestamp", columnList = "timestamp")
+})
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
@@ -24,9 +27,6 @@ import java.util.UUID;
 public class Payment {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
     private UUID correlationId;
 
     private String strategy;

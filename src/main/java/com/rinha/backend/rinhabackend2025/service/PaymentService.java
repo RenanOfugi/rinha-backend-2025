@@ -8,7 +8,6 @@ import com.rinha.backend.rinhabackend2025.repository.PaymentRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -25,7 +24,7 @@ public class PaymentService {
 
     public void sendPayment(PaymentDto paymentDto){
         repository.save(
-                new Payment(null, paymentDto.getCorrelationId(), "default", paymentDto.getAmount(), Instant.now(), StatusEnum.PENDING)
+                new Payment(paymentDto.getCorrelationId(), "default", paymentDto.getAmount(), Instant.now(), StatusEnum.PENDING)
         );
     }
 

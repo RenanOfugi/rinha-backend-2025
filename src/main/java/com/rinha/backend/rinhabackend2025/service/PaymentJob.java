@@ -7,13 +7,13 @@ import org.springframework.data.util.Pair;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
+import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Component
 public class PaymentJob {
@@ -26,35 +26,42 @@ public class PaymentJob {
         this.repository = repository;
     }
 
+    private final AtomicBoolean isProcessing = new AtomicBoolean(false);
+
     @Transactional
-    @Scheduled(fixedDelay = 1000)
+    @Scheduled(fixedDelay = 100)
     public void processingPayments(){
 
-        List<Payment> batchPayment = repository.findPendingPayment();
+        List<Payment> batchPayment = new ArrayList<>();
+
+        if (isProcessing.compareAndSet(false, true)){
+            try {
+                 batchPayment = repository.findPendingPayment();
+            } finally {
+                isProcessing.set(false);
+            }
+        }
+
+        if (batchPayment.isEmpty()) return;
 
         try(var executor = Executors.newVirtualThreadPerTaskExecutor()) {
 
-            List<Future<Pair<Payment, String>>> futures = new ArrayList<>();
+            //List<Future<Pair<Payment, String>>> futures = new ArrayList<>();
 
-            for (Payment payment : batchPayment){
-                futures.add(executor.submit( () -> sender.sendPayment(payment).block()));
-            }
+            List<CompletableFuture<Pair<Payment, String>>> futures = batchPayment.stream()
+                    .map(payment -> CompletableFuture.supplyAsync(() -> sender.sendPayment(payment).block()))
+                    .toList();
 
-            List<Payment> paymentsComplete = new ArrayList<>();
-
-            futures.forEach(future -> {
-                try {
-                    Pair<Payment, String> paymentStringPair = future.get();
-                    Payment payment = paymentStringPair.getFirst();
-                    payment.setStrategy(paymentStringPair.getSecond());
-                    payment.setStatus(StatusEnum.OK);
-                    paymentsComplete.add(payment);
-                } catch (InterruptedException | ExecutionException e) {
-                    System.out.println("ERRO: " + e.getMessage());
-                    System.out.println("Erro processamento");
-                    e.printStackTrace();
-                }
-            });
+            List<Payment> paymentsComplete = futures.stream()
+                    .map(CompletableFuture::join)
+                    .filter(Objects::nonNull)
+                    .map(result -> {
+                        Payment p = result.getFirst();
+                        p.setStrategy(result.getSecond());
+                        p.setStatus(StatusEnum.OK);
+                        return p;
+                    })
+                    .toList();
 
             repository.saveAll(paymentsComplete);
         }
