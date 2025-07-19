@@ -3,6 +3,8 @@ package com.rinha.backend.rinhabackend2025.service;
 import com.rinha.backend.rinhabackend2025.entity.Payment;
 import com.rinha.backend.rinhabackend2025.enums.StatusEnum;
 import com.rinha.backend.rinhabackend2025.repository.PaymentRepository;
+import jakarta.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.util.Pair;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -21,12 +23,28 @@ public class PaymentJob {
     private final PaymentSender sender;
     private final PaymentRepository repository;
 
+    @Value("${spring.datasource.url}")
+    private String url;
+
+    @Value("${spring.datasource.username}")
+    private String username;
+
+    @Value("${spring.datasource.password}")
+    private String password;
+
+    private JdbcService jdbcService;
+
+    private final AtomicBoolean isProcessing = new AtomicBoolean(false);
+
+    @PostConstruct
+    public void setConnection(){
+        jdbcService = new JdbcService(url, username, password);
+    }
+
     public PaymentJob(PaymentSender sender, PaymentRepository repository) {
         this.sender = sender;
         this.repository = repository;
     }
-
-    private final AtomicBoolean isProcessing = new AtomicBoolean(false);
 
     @Transactional
     @Scheduled(fixedDelay = 100)
@@ -60,8 +78,6 @@ public class PaymentJob {
                     Payment payment = paymentStringPair.getFirst();
                     payment.setStrategy(paymentStringPair.getSecond());
                     payment.setStatus(StatusEnum.OK);
-              //      paymentsComplete.add(payment);
-                    repository.save(payment);
                 } catch (InterruptedException | ExecutionException e) {
                     System.out.println("ERRO: " + e.getMessage());
                     System.out.println("Erro processamento");
@@ -69,7 +85,9 @@ public class PaymentJob {
                 }
             });
 
-            //repository.saveAll(paymentsComplete);
+//            repository.saveAll(paymentsComplete);
+            jdbcService.saveAll(paymentsComplete);
         }
     }
+
 }

@@ -26,7 +26,7 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
 
     @Query(value = """
                 SELECT p.* FROM payment p WHERE p.status = 'PENDING'
-                LIMIT 200
+                LIMIT 50
                 FOR UPDATE SKIP LOCKED
             """, nativeQuery = true)
     List<Payment> findPendingPayment();
